@@ -16,7 +16,7 @@ def count_values(data, param):
     return cnt
 
 
-@kepegawaian_bp.route('/card_pegawai')
+@kepegawaian_bp.route('/kepegawaian/card_pegawai')
 def card_pegawai():
     result = engine.execute(
         text(
@@ -46,7 +46,7 @@ def card_pegawai():
     return jsonify(result)
 
 
-@kepegawaian_bp.route('/kategori_pegawai')
+@kepegawaian_bp.route('/kepegawaian/kategori_pegawai')
 def kategori_pegawai():
     result = engine.execute(
         text(
@@ -73,7 +73,7 @@ def kategori_pegawai():
     return jsonify(result)
 
 
-@kepegawaian_bp.route('/status_pegawai')
+@kepegawaian_bp.route('/kepegawaian/status_pegawai')
 def status_pegawai():
     result = engine.execute(
         text(
@@ -100,7 +100,7 @@ def status_pegawai():
     return jsonify(result)
 
 
-@kepegawaian_bp.route('/pendidikan_jenis_kelamin')
+@kepegawaian_bp.route('/kepegawaian/pendidikan_jenis_kelamin')
 def pendidikan_jenis_kelamin():
     result = engine.execute(
         text(
@@ -133,7 +133,7 @@ def pendidikan_jenis_kelamin():
     return jsonify(result)
 
 
-@kepegawaian_bp.route('/instalasi_pegawai')
+@kepegawaian_bp.route('/kepegawaian/instalasi_pegawai')
 def instalasi_pegawai():
     result = engine.execute(
         text(
