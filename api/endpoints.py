@@ -1,162 +1,123 @@
 from collections import Counter
 
 from flask import Blueprint, jsonify
-from sqlalchemy import text
 
-from api.config import get_connection
+from api.query import *
 
 kepegawaian_bp = Blueprint('kepegawaian', __name__)
-engine = get_connection()
 
 
 def count_values(data, param):
     cnt = Counter()
     for i in range(len(data)):
-        cnt[data[i][param].lower().replace(' ', '_')] += 1
+        cnt[data[i][param]] += 1
     return cnt
 
 
 @kepegawaian_bp.route('/kepegawaian/card_pegawai')
 def card_pegawai():
-    result = engine.execute(
-        text(
-            f"""SELECT dcp.IdPegawai, jj.JenisJabatan  
-			 FROM dbo.DataCurrentPegawai dcp
-			 INNER JOIN dbo.Jabatan j 
-			 ON dcp.KdJabatan = j.KdJabatan 
-			 INNER JOIN dbo.JenisJabatan jj 
-			 ON j.KdJenisJabatan = jj.KdJenisJabatan 
-			 WHERE dcp.IdPegawai <> '8888888888'
-           	 ORDER BY dcp.IdPegawai ASC;"""))
-    data = []
-    for row in result:
-        data.append({
-            "id": row['IdPegawai'],
-            "jabatan": row['JenisJabatan'],
-            "judul": 'Card Pegawai',
-            "label": 'Kepegawaian'
-        })
+    # Get query result
+    result = query_card_pegawai()
+    
+    # Extract data by date (dict)
+    tmp = [{"id": row['IdPegawai'], "jabatan": row['JenisJabatan']} for row in result]
 
+    # Extract data as (dataframe)
+    cnts = count_values(tmp, 'jabatan')
+    data = [{"name": x, "value": y} for x, y in cnts.items()]
+    data.append({"name": "Semua Pegawai", "value": len(tmp)})
+
+    # Define return result as a json
     result = {
         "judul": 'Card Pegawai',
         "label": 'Kepegawaian',
-        "card": count_values(data, 'jabatan'),
+        "data": data, # count_values(data, 'jabatan'),
     }
-    result['card']['semua_pegawai'] = len(data)
     return jsonify(result)
 
 
 @kepegawaian_bp.route('/kepegawaian/kategori_pegawai')
 def kategori_pegawai():
-    result = engine.execute(
-        text(
-            f"""SELECT dp.IdPegawai, jp.JenisPegawai 
-			 FROM dbo.DataPegawai dp
-			 INNER JOIN dbo.JenisPegawai jp
-			 ON dp.KdJenisPegawai = jp.KdJenisPegawai
-             WHERE dp.IdPegawai <> '8888888888'
-           	 ORDER BY dp.IdPegawai ASC;"""))
-    data = []
-    for row in result:
-        data.append({
-            "id": row['IdPegawai'],
-            "jenis_pegawai": row['JenisPegawai'],
-            "judul": 'Kategori Pegawai',
-            "label": 'Kepegawaian'
-        })
+    # Get query result
+    result = query_kategori_pegawai()
 
+    # Extract data by date (dict)
+    tmp = [{"id": row['IdPegawai'], "jenis_pegawai": row['JenisPegawai']} for row in result]
+
+    # Extract data as (dataframe)
+    cnts = count_values(tmp, 'jenis_pegawai')
+    data = [{"name": x, "value": y} for x, y in cnts.items()]
+
+    # Define return result as a json
     result = {
         "judul": 'Kategori Pegawai',
         "label": 'Kepegawaian',
-        "kategori": count_values(data, 'jenis_pegawai'),
+        "data": data, # count_values(data, 'jenis_pegawai'),
     }
     return jsonify(result)
 
 
 @kepegawaian_bp.route('/kepegawaian/status_pegawai')
 def status_pegawai():
-    result = engine.execute(
-        text(
-            f"""SELECT dcp.IdPegawai, sp.Status 
-			 FROM dbo.DataCurrentPegawai dcp 
-			 INNER JOIN dbo.StatusPegawai sp 
-			 ON dcp.KdStatus = sp.KdStatus
-			 WHERE dcp.IdPegawai <> '8888888888'
-           	 ORDER BY dcp.IdPegawai ASC;"""))
-    data = []
-    for row in result:
-        data.append({
-            "id": row['IdPegawai'],
-            "status": row['Status'],
-            "judul": 'Status Pegawai',
-            "label": 'Kepegawaian'
-        })
+    # Get query result
+    result = query_status_pegawai()
 
+    # Extract data by date (dict)
+    tmp = [{"id": row['IdPegawai'], "status": row['Status']} for row in result]
+
+    # Extract data as (dataframe)
+    cnts = count_values(tmp, 'status')
+    data = [{"name": x, "value": y} for x, y in cnts.items()]
+
+    # Define return result as a json
     result = {
         "judul": 'Status Pegawai',
         "label": 'Kepegawaian',
-        "kategori": count_values(data, 'status'),
+        "data": data, # count_values(data, 'status'),
     }
     return jsonify(result)
 
 
 @kepegawaian_bp.route('/kepegawaian/pendidikan_jenis_kelamin')
 def pendidikan_jenis_kelamin():
-    result = engine.execute(
-        text(
-            f"""SELECT dcp.IdPegawai, p.Pendidikan, dp.JenisKelamin  
-			FROM dbo.DataCurrentPegawai dcp 
-			INNER JOIN dbo.DataPegawai dp 
-			ON dcp.IdPegawai = dp.IdPegawai
-			INNER JOIN dbo.KualifikasiJurusan kj  
-			ON dcp.KdKualifikasiJurusan = kj.KdKualifikasiJurusan 
-			INNER JOIN dbo.Pendidikan p  
-			ON kj.KdPendidikan = p.KdPendidikan 
-			WHERE dcp.IdPegawai <> '8888888888'
-           	ORDER BY dcp.IdPegawai ASC;"""))
-    data = []
-    for row in result:
-        data.append({
-            "id": row['IdPegawai'],
-            "pendidikan": row['Pendidikan'],
-            "jenis_kelamin": row['JenisKelamin'],
-            "judul": 'Pendidikan dan Jenis Kelamin',
-            "label": 'Kepegawaian'
-        })
+    # Get query result
+    result = query_pendidikan_jenis_kelamin()
 
+    # Extract data by date (dict)
+    tmp = [{"id": row['IdPegawai'], "pendidikan": row['Pendidikan'], "jenis_kelamin": row['JenisKelamin']} for row in result]
+
+    # Extract data as (dataframe)
+    cnts = count_values(tmp, 'jenis_kelamin')
+    cnts2 = count_values(tmp, 'pendidikan')
+    gender = [{"name": x, "value": y} for x, y in cnts.items()]
+    education = [{"name": x, "value": y} for x, y in cnts2.items()]
+ 
+    # Define return result as a json
     result = {
         "judul": 'Pendidikan dan Jenis Kelamin',
         "label": 'Kepegawaian',
-        "pendidikan": count_values(data, 'pendidikan'),
-        "jenis_kelamin": count_values(data, 'jenis_kelamin'),
+        "pendidikan": gender,
+        "jenis_kelamin": education,
     }
     return jsonify(result)
 
 
 @kepegawaian_bp.route('/kepegawaian/instalasi_pegawai')
 def instalasi_pegawai():
-    result = engine.execute(
-        text(
-            f"""SELECT dcp.IdPegawai, i.NamaInstalasi  
-			 FROM dbo.DataCurrentPegawai dcp
-			 INNER JOIN dbo.Ruangan r  
-			 ON dcp.KdRuanganKerja = r.KdRuangan 
-			 INNER JOIN dbo.Instalasi i  
-			 ON r.KdInstalasi = i.KdInstalasi  
-			 WHERE dcp.IdPegawai <> '8888888888'
-           	 ORDER BY dcp.IdPegawai ASC;"""))
-    data = []
-    for row in result:
-        data.append({
-            "id": row['IdPegawai'],
-            "instalasi": row['NamaInstalasi'],
-            "judul": 'Instalasi Pegawai',
-            "label": 'Kepegawaian'
-        })
+    # Get query result
+    result = query_instalasi_pegawai()
+    
+    # Extract data by date (dict)
+    tmp = [{"id": row['IdPegawai'], "instalasi": row['NamaInstalasi']} for row in result]
 
+    # Extract data as (dataframe)
+    cnts = count_values(tmp, 'instalasi')
+    data = [{"name": x, "value": y} for x, y in cnts.items()]
+ 
+    # Define return result as a json
     result = {
-        "judul": 'Pendidikan dan Jenis Kelamin',
+        "judul": 'Instalasi Pegawai',
         "label": 'Kepegawaian',
-        "instalasi": count_values(data, 'instalasi'),
+        "data": data, # count_values(data, 'instalasi'),
     }
     return jsonify(result)
